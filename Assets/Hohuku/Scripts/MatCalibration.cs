@@ -50,7 +50,7 @@ public class MatCalibration : MonoBehaviour
     {
         private set
         {
-            pull_area_max = value;
+            pull_area_max = value+0.1f;
             SaveCalibrationData(PULL_AREA_MAX, value);
         }
         get { return pull_area_max; }
@@ -94,8 +94,8 @@ public class MatCalibration : MonoBehaviour
 
 
        // Debug.Log(GetNowDistance(right_hand));
-        if (GetNowDistance(right_hand) <= RightHandDepth)
-            Debug.Log("接地");
+      //  if (GetNowDistance(right_hand) <= RightHandDepth)
+         //   Debug.Log("接地");
     }
 
     public float GetNowDistance(Transform target)
