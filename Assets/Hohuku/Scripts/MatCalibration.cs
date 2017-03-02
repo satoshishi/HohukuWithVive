@@ -1,121 +1,135 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.VR;
 
 /// <summary>
 /// マットのキャリブレーションをするスクリプト
+/// 手順
+/// 1 対応するviveコンの割り当てを調整する.
+/// 2 体験者にマットの中央に手を置いてもらいCキーでキャリブレーション
+/// 3 キャリブレーションで設定するのは左右の手ごとの接地を判断するためのdepthと引手の範囲(viveコン ~ hmd)
+/// 4 キャリブレーション後の数値は保存してリスタート時に反映
 /// </summary>
 public class MatCalibration : MonoBehaviour
 {
     #region keys
 
-    public const string POSITION_Z = "POSITION_Z";
-    public const string SIZE_X = "SIZE_X";
-    public const string SIZE_Z = "SIZE_Z";
-    public const string DEPTH = "DEPTH";
+    public const string RIGHT_HAND_DEPTH = "RIGHT_HAND_DEPTH";
+    public const string LEFT_HAND_DEPTH = "LEFT_HAND_DEPTH";
+    public const string PULL_AREA_MAX = "PULL_AREA_MAX";
+    public const string PULL_AREA_MIN = "PULL_AREA_MIN";
 
     #endregion
 
-    public GameObject test;
+    #region values
+
+    private float right_hand_depth;
+    public float RightHandDepth
+    {
+        private set
+        {
+            right_hand_depth = value;
+            SaveCalibrationData(RIGHT_HAND_DEPTH, value);
+        }
+        get { return right_hand_depth; }
+    }
+
+    private float left_hand_depth;
+    public float LeftHandDepth
+    {
+        private set
+        {
+            left_hand_depth = value;
+            SaveCalibrationData(LEFT_HAND_DEPTH, value);
+        }
+        get { return left_hand_depth; }
+    }
+
+    private float pull_area_max;
+    public float PullAreaMax
+    {
+        private set
+        {
+            pull_area_max = value;
+            SaveCalibrationData(PULL_AREA_MAX, value);
+        }
+        get { return pull_area_max; }
+    }
+
+    private float pull_area_min;
+    public float PullAreaMin
+    {
+        private set
+        {
+            pull_area_min = value;
+            SaveCalibrationData(PULL_AREA_MIN, value);
+        }
+        get { return pull_area_min; }
+    }
+
+    #endregion
+
     [SerializeField]
     private MeshRenderer mat_mesh;
+   /* [SerializeField]
+    private Transform max_look_point;
+    [SerializeField]
+    private Transform min_look_point;*/
 
-   // private Vector3 Hand_Calibration
+    public Transform hmd;
+    public Transform right_hand;
+    public Transform left_hand;
 
     // Use this for initialization
     void Start()
     {
-        // LoadCalibrationData();
-      //  ResetCalibration();
+        LoadAll();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyUp(KeyCode.UpArrow))
-            test.transform.position = new Vector3(test.transform.position.x, test.transform.position.y, test.transform.position.z+1);
-        if (Input.GetKeyUp(KeyCode.DownArrow))
-            test.transform.position = new Vector3(test.transform.position.x, test.transform.position.y, test.transform.position.z-1);
+        if (Input.GetKeyUp(KeyCode.C))
+            Calibration();
 
-        //  StartCoroutine(PlayCalibration());
+
+       // Debug.Log(GetNowDistance(right_hand));
+        if (GetNowDistance(right_hand) <= RightHandDepth)
+            Debug.Log("接地");
     }
 
-    IEnumerator PlayCalibration()
+    public float GetNowDistance(Transform target)
     {
-        mat_mesh.enabled = true;
-
-        Debug.Log("幅を設定します");
-
-        while (!Input.GetKeyUp(KeyCode.Return))
-        {
-            if (Input.GetKeyUp(KeyCode.UpArrow))
-                transform.localScale = new Vector3(transform.localScale.x + 0.1f, transform.localScale.y, transform.localScale.z);
-            if (Input.GetKeyUp(KeyCode.DownArrow))
-                transform.localScale = new Vector3(transform.localScale.x - 0.1f, transform.localScale.y, transform.localScale.z);
-            yield return null;
-        }
-
-        yield return new WaitForSeconds(0.2f);
-
-        Debug.Log("高さを設定します");
-
-        while (!Input.GetKeyUp(KeyCode.Return))
-        {
-            if (Input.GetKeyUp(KeyCode.UpArrow))
-                transform.localScale = new Vector3(transform.localScale.x, transform.localScale.y, transform.localScale.z + 0.1f);
-           
-            if (Input.GetKeyUp(KeyCode.DownArrow))
-                transform.localScale = new Vector3(transform.localScale.x, transform.localScale.y, transform.localScale.z - 0.1f);
-            yield return null;
-        }
-
-        yield return new WaitForSeconds(0.2f);
-
-        Debug.Log("深さを設定します");
-
-        while (!Input.GetKeyUp(KeyCode.Return))
-        {
-            if (Input.GetKeyUp(KeyCode.UpArrow))
-                transform.localScale = new Vector3(transform.localScale.x, transform.localScale.y + 0.1f, transform.localScale.z);
-            if (Input.GetKeyUp(KeyCode.DownArrow))
-                transform.localScale = new Vector3(transform.localScale.x, transform.localScale.y - 0.1f, transform.localScale.z);
-            yield return null;
-        }
-
-        SaveCalibrationData();
-        Debug.Log("キャリブレーション完了!");
+        return (target.position.y - transform.position.y);
     }
 
-    /// <summary>
-    /// 初期状態でキャリブレーションする
-    /// </summary>
-    public void ResetCalibration()
+    public void Calibration()
     {
-        transform.position = Vector3.zero;
-        transform.localScale = new Vector3(1f, 1f, 1f);
-        SaveCalibrationData();
+        RightHandDepth = (right_hand.position.y - transform.position.y) *1.04f;
+        LeftHandDepth = (left_hand.position.y - transform.position.y)* 1.04f;
+        PullAreaMax = hmd.transform.position.z;
+        PullAreaMin = transform.position.z;
     }
 
-    public void SaveCalibrationData()
+    public void SaveCalibrationData(string key, float value)
     {
-        PlayerPrefs.SetFloat(POSITION_Z, transform.position.z);
-        PlayerPrefs.SetFloat(SIZE_X, transform.localScale.x);
-        PlayerPrefs.SetFloat(SIZE_Z, transform.localScale.z);
-        PlayerPrefs.SetFloat(DEPTH, transform.localScale.y);
+        PlayerPrefs.SetFloat(key, value);
+        Debug.Log("Save : " + key + " : " + value);
     }
 
     /// <summary>
     /// 前回キャリブレーションしたサイズでキャリブレーションする
     /// </summary>
-    public void  LoadCalibrationData()
-    {
-        transform.position = new Vector3(transform.position.x, transform.position.y, GetCalibrationData(POSITION_Z));
-        transform.localScale = new Vector3(GetCalibrationData(SIZE_X), GetCalibrationData(DEPTH), GetCalibrationData(SIZE_Z));
-    }
-
-    public float GetCalibrationData(string key)
+    public float LoadCalibrationData(string key)
     {
         return PlayerPrefs.GetFloat(key, -1);
+    }
+
+    public void LoadAll()
+    {
+        RightHandDepth = LoadCalibrationData(RIGHT_HAND_DEPTH);
+        LeftHandDepth = LoadCalibrationData(LEFT_HAND_DEPTH);
+        PullAreaMax = LoadCalibrationData(PULL_AREA_MAX);
+        PullAreaMin = LoadCalibrationData(PULL_AREA_MIN);
     }
 }
