@@ -31,6 +31,7 @@ public class HohukuController : MonoBehaviour
     public Transform mat;
     public MatCalibration calibration;
     public MoveController move;
+    public StimulusController stimulus;
 
     /// <summary>
     /// マットと手の距離(深さ)
@@ -83,7 +84,7 @@ public class HohukuController : MonoBehaviour
         /*     Debug.Log("before " + BeforePullArea +
                  " pull " + PullArea());*/
 
-        return BeforePullArea < PullArea() && (PullArea()>=0.1f);
+        return BeforePullArea < PullArea() && (PullArea() >= 0.1f);
     }
 
     /// <summary>
@@ -132,13 +133,17 @@ public class HohukuController : MonoBehaviour
                 {/*
                      StopAllCoroutines();
                     IsAlreadyMove = false;*/
+                    stimulus.StopAll();
                     state = HandState.IDLE;
                 }
 
                 NowPullHandPos = transform.localPosition.z;
 
-                if (IsMoveForward())
+                if (IsMoveForward() && PullArea()<0.75f)
+                {
                     move.Move(0.01f);
+                    stimulus.UpdateStrength(PullArea());
+                }
 
                 BeforePullArea = PullArea();
 
