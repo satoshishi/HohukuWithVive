@@ -50,7 +50,7 @@ public class MatCalibration : MonoBehaviour
     {
         private set
         {
-            pull_area_max = value+0.1f;
+            pull_area_max = value;
             SaveCalibrationData(PULL_AREA_MAX, value);
         }
         get { return pull_area_max; }
@@ -98,17 +98,12 @@ public class MatCalibration : MonoBehaviour
          //   Debug.Log("接地");
     }
 
-    public float GetNowDistance(Transform target)
-    {
-        return (target.position.y - transform.position.y);
-    }
-
     public void Calibration()
     {
         RightHandDepth = (right_hand.position.y - transform.position.y) *1.04f;
         LeftHandDepth = (left_hand.position.y - transform.position.y)* 1.04f;
-        PullAreaMax = hmd.transform.position.z;
-        PullAreaMin = transform.position.z;
+        PullAreaMax = hmd.transform.localPosition.z;
+        PullAreaMin = transform.localPosition.z;
     }
 
     public void SaveCalibrationData(string key, float value)

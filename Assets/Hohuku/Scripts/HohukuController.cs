@@ -23,13 +23,14 @@ public class HohukuController : MonoBehaviour
     [SerializeField]
     private HandState state;
     [SerializeField]
-    private bool IsAdmit=false;
+    private bool IsAdmit = false;
     [SerializeField]
     private HandType type;
 
     public Transform hand;
     public Transform mat;
     public MatCalibration calibration;
+    public MoveController move;
 
     /// <summary>
     /// マットと手の距離(深さ)
@@ -38,7 +39,7 @@ public class HohukuController : MonoBehaviour
     public float DepthDistance
     {
         set { depth = value; }
-        get { return (depth - mat.position.y); }
+        get { return (depth - (mat.position.y * 1.1f)); }
     }
 
     /// <summary>
@@ -64,7 +65,7 @@ public class HohukuController : MonoBehaviour
     private float before_pull_area;
     public float BeforePullArea
     {
-        set { before_pull_area = value;}
+        set { before_pull_area = value; }
         get { return before_pull_area; }
     }
 
@@ -74,11 +75,19 @@ public class HohukuController : MonoBehaviour
     /// <returns></returns>
     public bool IsGround()
     {
-        return DepthDistance <= (type==HandType.RIGHT ? calibration.RightHandDepth : calibration.LeftHandDepth);
+        return DepthDistance <= (type == HandType.RIGHT ? calibration.RightHandDepth : calibration.LeftHandDepth);
+    }
+
+    public bool IsMoveForward()
+    {
+        /*     Debug.Log("before " + BeforePullArea +
+                 " pull " + PullArea());*/
+
+        return BeforePullArea < PullArea() && (PullArea()>=0.1f);
     }
 
     /// <summary>
-    /// 現在の手の位置(0.0~1.0)
+    /// 現在の手の位置(0.00~1.00)
     /// calibrationされた範囲内で手の接地した位置からの値
     /// </summary>
     /// <returns></returns>
@@ -87,44 +96,54 @@ public class HohukuController : MonoBehaviour
         /*  Debug.Log("nowpull : " + NowPullHandPos +
               " min : " + calibration.PullAreaMin +
               " nax : " + calibration.PullAreaMax);*/
-        return Mathf.Ceil((NowPullHandPos - calibration.PullAreaMin) / (calibration.PullAreaMax - calibration.PullAreaMin)*10f)/10f;
+        float area = Mathf.Ceil((NowPullHandPos - calibration.PullAreaMin) / (calibration.PullAreaMax - calibration.PullAreaMin) * 100f) / 100f;
+
+        return area < 0 ? 0 : area > 1 ? 1 : area;
     }
 
-	// Use this for initialization
-	void Start ()
+    // Use this for initialization
+    void Start()
     {
-		
-	}
-	
-	// Update is called once per frame
-	void Update ()
+
+    }
+
+    // Update is called once per frame
+    void Update()
     {
         DepthDistance = hand.position.y;
 
-        if(IsAdmit)
-        UpdateHandLogic();
-	}
+        if (IsAdmit)
+            UpdateHandLogic();
+    }
 
     public void UpdateHandLogic()
     {
-        switch(state)
+        switch (state)
         {
             case HandState.IDLE:
                 if (IsGround()) state = HandState.GROUND;
                 break;
             case HandState.GROUND:
-                StartPos = transform.position.z;
+                StartPos = transform.localPosition.z;
                 state = HandState.HOHUKU;
                 break;
             case HandState.HOHUKU:
                 if (!IsGround())
+                {/*
+                     StopAllCoroutines();
+                    IsAlreadyMove = false;*/
                     state = HandState.IDLE;
-                NowPullHandPos = transform.position.z;
+                }
 
-                if (before_pull_area < PullArea())
-                    Debug.Log("移動");
+                NowPullHandPos = transform.localPosition.z;
 
-                before_pull_area = PullArea();
+                if (IsMoveForward())
+                    move.Move(0.01f);
+
+                BeforePullArea = PullArea();
+
+                /*     if (!IsAlreadyMove)
+                         StartCoroutine(MoveEvent());*/
                 break;
         }
     }
