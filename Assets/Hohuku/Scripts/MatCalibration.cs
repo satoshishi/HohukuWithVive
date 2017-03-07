@@ -79,6 +79,7 @@ public class MatCalibration : MonoBehaviour
     public Transform hmd;
     public Transform right_hand;
     public Transform left_hand;
+    public SteamVR_ChangeControllerIndex index;
 
     // Use this for initialization
     void Start()
@@ -104,6 +105,7 @@ public class MatCalibration : MonoBehaviour
         LeftHandDepth = (left_hand.position.y - transform.position.y)* 1.04f;
         PullAreaMax = hmd.transform.localPosition.z;
         PullAreaMin = transform.localPosition.z;
+        index.IsAdmitChangeDeviceIndex = false;
     }
 
     public void SaveCalibrationData(string key, float value)

@@ -34,6 +34,8 @@ public class SteamVR_TrackedObject : MonoBehaviour
 	public Transform origin; // if not set, relative to parent
     public bool isValid = false;
 
+    public bool IsAdmitDevieIndexChange = true;//fujisawa edit
+
 	private void OnNewPoses(TrackedDevicePose_t[] poses)
 	{
 		if (index == EIndex.None)
@@ -94,7 +96,7 @@ public class SteamVR_TrackedObject : MonoBehaviour
 
 	public void SetDeviceIndex(int index)
 	{
-		if (System.Enum.IsDefined(typeof(EIndex), index))
+		if (System.Enum.IsDefined(typeof(EIndex), index) && IsAdmitDevieIndexChange)
 			this.index = (EIndex)index;
 	}
 }

@@ -139,7 +139,7 @@ public class HohukuController : MonoBehaviour
 
                 NowPullHandPos = transform.localPosition.z;
 
-                if (IsMoveForward() && PullArea()<0.75f)
+                if (IsMoveForward())
                 {
                     move.Move(0.01f);
                     stimulus.UpdateStrength(PullArea());

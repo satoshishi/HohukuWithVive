@@ -12,6 +12,20 @@ public class SteamVR_ChangeControllerIndex : MonoBehaviour {
         NONE=-1
     }
 
+    /// <summary>
+    /// コントローラのインデックス更新許可
+    /// </summary>
+    private bool is_admit_change_device_index;
+    public bool IsAdmitChangeDeviceIndex
+    {
+        set
+        {
+            foreach (SteamVR_TrackedObject c in controller)
+                c.IsAdmitDevieIndexChange = value;
+        }
+    }
+
+
     public List<SteamVR_TrackedObject> controller;
     [SerializeField]
     private Controller_Type select_controller;
